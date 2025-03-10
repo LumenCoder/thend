@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumens Blog</title>
+  <style>
+    /* Global resets */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      font-family: 'Arial', sans-serif;
+      background: black;
+      color: white;
+    }
+    /* Fullscreen canvas as background */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      transition: filter 2s ease;
+    }
+    /* General section styling */
+    .section {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    /* Utility classes for transitions */
+    .hidden {
+      opacity: 0;
+    }
+    .fade-in {
+      opacity: 1;
+      transition: opacity 2s ease;
+    }
+    .fade-out {
+      animation: fadeOut 1s forwards;
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    /* Title styles */
+    .title {
+      font-size: 4em;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.8);
+    }
+    /* Subtitle style */
+    .subtitle {
+      font-size: 2em;
+      margin-top: 20px;
+      opacity: 0;
+    }
+    .slide-down {
+      animation: slideDown 1s forwards;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    /* Buttons container */
+    .buttons {
+      margin-top: 40px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    /* Button styling */
+    .btn {
+      padding: 15px 30px;
+      font-size: 1em;
+      border: none;
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 15px rgba(255,255,255,0.5);
+    }
+    /* Animating title slide up */
+    .slide-up {
+      animation: slideUp 1s forwards;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(-100px); opacity: 0; }
+    }
+    /* Blog content style */
+    .blog-content {
+      width: 80%;
+      max-width: 800px;
+      margin-top: 40px;
+      text-align: left;
+      font-size: 1.2em;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <!-- Canvas for dynamic stars and comet -->
+  <canvas id="spaceCanvas"></canvas>
+
+  <!-- Intro Section with initial title -->
+  <section id="intro" class="section">
+    <div id="introContent">
+      <h1 id="mainTitle" class="title hidden">Lumens Blog</h1>
+    </div>
+  </section>
+
+  <!-- Selection Section: Appears on scroll -->
+  <section id="selection" class="section hidden">
+    <h2 id="question" class="subtitle">What blog would you like to read today?</h2>
+    <div class="buttons">
+      <button class="btn" data-blog="coding">Coding</button>
+      <button class="btn" data-blog="business">Business</button>
+      <button class="btn" data-blog="text">Text</button>
+      <button class="btn" data-blog="os">OS</button>
+      <button class="btn" data-blog="lol">LOL</button>
+    </div>
+  </section>
+
+  <!-- Blog Content Section: Loads after button click -->
+  <section id="blogSection" class="section hidden">
+    <h1 id="blogTitle" class="title"></h1>
+    <div id="blogContent" class="blog-content">
+      <!-- Dynamic blog content inserted here -->
+    </div>
+  </section>
+
+  <script>
+    /* --- Canvas Animation for Stars and Comet --- */
+    const canvas = document.getElementById('spaceCanvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let comet = { x: -50, y: 100, size: 2, speed: 2 };
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Initialize stars with random positions, sizes, and twinkle factors
+    function initStars(count) {
+      stars = [];
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5,
+          alpha: Math.random(),
+          delta: Math.random() * 0.02 + 0.005
+        });
+      }
+    }
+    initStars(200);
+
+    function drawStars() {
+      for (let star of stars) {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+        ctx.fill();
+        // Update star alpha for twinkling effect
+        star.alpha += star.delta;
+        if (star.alpha <= 0 || star.alpha >= 1) star.delta = -star.delta;
+      }
+    }
+
+    function drawComet() {
+      const tailLength = 100;
+      // Create a gradient for the tail
+      let gradient = ctx.createLinearGradient(comet.x, comet.y, comet.x - tailLength, comet.y);
+      gradient.addColorStop(0, 'rgba(255,255,255,1)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.beginPath();
+      ctx.moveTo(comet.x, comet.y);
+      ctx.lineTo(comet.x - tailLength, comet.y);
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = comet.size;
+      ctx.stroke();
+      // Draw comet head
+      ctx.beginPath();
+      ctx.arc(comet.x, comet.y, comet.size * 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,1)';
+      ctx.fill();
+      // Update comet position for next frame
+      comet.x += comet.speed;
+      comet.y += 0.5; // subtle downward drift
+      // Reset comet if it goes off screen
+      if (comet.x - tailLength > canvas.width || comet.y > canvas.height) {
+        comet.x = -50;
+        comet.y = Math.random() * canvas.height * 0.5;
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawStars();
+      drawComet();
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    /* --- Intro and Scroll Animations --- */
+    window.addEventListener('load', () => {
+      // After 2 seconds, blur the canvas and fade in the title
+      setTimeout(() => {
+        canvas.style.filter = 'blur(4px)';
+        const mainTitle = document.getElementById('mainTitle');
+        mainTitle.classList.remove('hidden');
+        mainTitle.classList.add('fade-in');
+      }, 2000);
+
+      // When scrolling, animate the intro title out and reveal selection section
+      window.addEventListener('scroll', () => {
+        const scrollPos = window.scrollY;
+        if (scrollPos > 100) {
+          const title = document.getElementById('mainTitle');
+          if (!title.classList.contains('slide-up')) {
+            title.classList.add('slide-up');
+          }
+          const selection = document.getElementById('selection');
+          if (selection.classList.contains('hidden')) {
+            selection.classList.remove('hidden');
+            // Animate subtitle into view
+            document.getElementById('question').classList.add('slide-down');
+            selection.classList.add('fade-in');
+          }
+        }
+      });
+    });
+
+    /* --- Button Click: Transition to Blog Content --- */
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Fade out the selection section
+        const selection = document.getElementById('selection');
+        selection.classList.add('fade-out');
+        setTimeout(() => {
+          selection.classList.add('hidden');
+          // Show the blog section with the chosen title and content
+          const blogSection = document.getElementById('blogSection');
+          blogSection.classList.remove('hidden');
+          blogSection.classList.add('fade-in');
+          const blogTitle = document.getElementById('blogTitle');
+          blogTitle.textContent = btn.textContent;
+          loadBlogContent(btn.getAttribute('data-blog'));
+        }, 1000); // match fade-out duration
+      });
+    });
+
+    /* --- Load Blog Content (Placeholder Text) --- */
+    function loadBlogContent(blogType) {
+      const blogContent = document.getElementById('blogContent');
+      let content = '';
+      switch(blogType) {
+        case 'coding':
+          content = '<p>Welcome to the Coding blog! Here you will find tutorials, tips, and deep dives into programming languages and development tools.</p>';
+          break;
+        case 'business':
+          content = '<p>Welcome to the Business blog! Explore insights on startups, management, and market trends.</p>';
+          break;
+        case 'text':
+          content = '<p>Welcome to the Text blog! Delve into literature, writing tips, and creative storytelling.</p>';
+          break;
+        case 'os':
+          content = '<p>Welcome to the OS blog! Learn about operating systems, software updates, and tech innovations.</p>';
+          break;
+        case 'lol':
+          content = '<p>Welcome to the LOL blog! Enjoy humor, memes, and light-hearted content to brighten your day.</p>';
+          break;
+        default:
+          content = '<p>Welcome to Lumens Blog! Choose a category to start reading.</p>';
+      }
+      blogContent.innerHTML = content;
+    }
+  </script>
+</body>
+</html>
